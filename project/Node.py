@@ -5,27 +5,22 @@ import road_id_hash
 class Node:
     def __init__(self, data, step=0, h=0):
         self.data = data
-        self.father = None # 父节点
+        self.index = road_id_hash.get_index(data)
+        self.father = None  # 父节点
         self.g = step  # g值
         self.h = h  # h值
 
     # 启发函数（出发地和目的地之间的距离）
     def setH(self, goal):
-        id = gol.get_value('road_id')
         dis = gol.get_value('road_dis')
-        startnode = id.index(self.data)
-        endnode = id.index(goal.data)
-        self.h = dis[startnode][endnode]
+        self.h = dis[self.index][goal.index]
 
     # 实际代价（时间）
     def setG(self, find_ways):
-        id = gol.get_value('road_id')
         time = gol.get_value('time_after')
         for i in find_ways:
-            ind = id.index(i)
-            self.g += time[ind][1]
-        self_ind = id.index(self.data)
-        self.g += time[self_ind][1]
+            self.g += time[i.index][1]
+        self.g += time[self.index][1]
 
     def setFather(self, node):
         self.father = node

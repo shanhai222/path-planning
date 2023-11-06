@@ -54,7 +54,7 @@ class A_star:
     搜索一个节点
     """
     def searchOneNode(self, node):
-        id = gol.get_value('road_id')
+        # id = gol.get_value('road_id')
         time = gol.get_value('time_after')
         # 忽略封闭列表
         if self.nodeInCloselist(node):
@@ -69,7 +69,8 @@ class A_star:
         # 如果在openList中，判断currentNode到当前点的G是否更小
         # 如果更小，就重新计算g值，并且改变father
         else:
-            self_ind = id.index(node.data)
+            # self_ind = id.index(node.data)
+            self_ind = node.index
             time_node = time[self_ind][1]
             if self.currentNode.g + time_node < node.g:
                 node.g = self.currentNode.g + time_node
@@ -83,11 +84,15 @@ class A_star:
     def searchNear(self):
         id = gol.get_value('road_id')
         adj_matrix = gol.get_value('adj_matrix')
+        num_nodes = adj_matrix.shape[0]
         road_next = []  # 从当前路段可到达的所有路段id
-        ind = id.index(self.currentNode.data)
-        for i in range(1448):
+        # ind = id.index(self.currentNode.data)
+        ind = self.currentNode.index
+
+        for i in range(num_nodes):
             if adj_matrix[ind][i] != 0:
-                road_id = road_id_hash.id_hash(i)
+                # road_id = road_id_hash.id_hash(i)
+                road_id = road_id_hash.get_id(i)
                 road_next.append(road_id)
 
         for road in road_next:
@@ -106,7 +111,8 @@ class A_star:
         while len(self.openList) != 0:
             # 获取当前开放列表里F值最小的节点
             self.currentNode = self.getMinFNode()
-            self.find_way.append(self.currentNode.data)
+            # self.find_way.append(self.currentNode.data)
+            self.find_way.append(self.currentNode)
             if self.currentNodeIsEndNode():
                 self.find_way.append(self.currentNode)
             else:
@@ -114,6 +120,8 @@ class A_star:
                 self.openList.remove(self.currentNode)
                 #self.step = self.currentNode.getG()
                 self.searchNear()
-        gol.set_value('find_way', self.find_way)
+
+        path = road_id_hash.transfer_path_to_road_id(self.find_way)  # 将node转化为road_id组成的path
+        gol.set_value('find_way', path)
 
         return True

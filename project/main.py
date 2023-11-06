@@ -1,10 +1,13 @@
 import pandas as pd
 import numpy as np
+import torch
+import random
 import gol
 import re
 import pickle
 import A_star
 import Node
+import road_id_hash
 
 # 生成随机速度
 def randfloat(num, l, h):
@@ -22,7 +25,7 @@ def calculate_time(length, velocity):
     road_time = np.zeros((1448, 2))
     for i in range(0, 1448):
         road_time[i][0] = length[i][0]
-        road_time[i][1] = length[i][1] / velocity[i][1]
+        road_time[i][1] = length[i][1] / velocity[i]
 
     return road_time
 
@@ -32,31 +35,38 @@ def calculate_time(length, velocity):
 
 if __name__ == '__main__':
     gol._init()
+    # 路段信息读取
     adj_matrix = pd.read_pickle('./data_use/adj_matrix.pkl')  # 路段间的邻接矩阵（有向）
     road_length = pd.read_pickle('./data_use/road_filtered_length.pkl')  # 每个路段的长度
     road_id = pd.read_pickle('./data_use/road_linkid.pkl')  # 路段对应的id
     road_dis = pd.read_pickle('./data_use/dis_mat.pkl')  # 路段间的直线距离
+
+    # 将路段id映射为index存储为字典
+    road_id_mapping = road_id_hash.road_id_map(road_id)
+
     gol.set_value('adj_matrix', adj_matrix)
     gol.set_value('road_length', road_length)
     gol.set_value('road_id', road_id)
     gol.set_value('road_dis', road_dis)
+    gol.set_value('road_id_mapping', road_id_mapping)
     #print(length.shape)
-    print(road_id[1000])
+    # print(road_id[1000])
 
-    # 构造变化前后的速度
-    v1 = randfloat(1448, 0, 60)
-    v2 = randfloat(1448, 0, 60)
-    velocity1 = np.zeros((1448, 2))
-    velocity2 = np.zeros((1448, 2))
-    for i in range(0, 1448):
-        velocity1[i][0] = road_id[i]
-        velocity2[i][0] = road_id[i]
-        velocity1[i][1] = v1[i]
-        velocity2[i][1] = v2[i]
+    # 获取交通状况
+    test = pd.read_pickle('./data_use/test.pkl')
+    output = torch.load('./data_use/output.pth')  # 预测结果 (870, 1, 1448, 1)
+
+    # 取第i个时间片
+    i = random.randint(0, 870)
+    print(i)
+    # 当前时间的实时路况
+    now_v = test['x'][i][0]  # (1448,1)
+    # 模型预测的下一个时间片的路况
+    predict_v = output[i][0].numpy()  # (1448,1) km/h
 
     # 计算变化前后各路段所需时间
-    time1 = calculate_time(road_length, velocity1)
-    time2 = calculate_time(road_length, velocity2)
+    time1 = calculate_time(road_length, now_v)
+    time2 = calculate_time(road_length, predict_v)
     gol.set_value('time_before', time1)
     gol.set_value('time_after', time2)
 
@@ -64,6 +74,5 @@ if __name__ == '__main__':
     end_node = Node.Node(1569718849)
     a = A_star.A_star(start_node, end_node)
     if a.start():
-        find_ways = gol.get_value('find_ways')
-        for i in find_ways:
-            print(i)
+        find_way = gol.get_value('find_way')
+        print(find_way)
