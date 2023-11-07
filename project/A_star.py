@@ -72,7 +72,7 @@ class A_star:
         else:
             # self_ind = id.index(node.data)
             self_ind = node.index
-            time_node = time[self_ind][1]
+            time_node = time[self_ind][0]
             if self.currentNode.g + time_node < node.g:
                 node.g = self.currentNode.g + time_node
                 node.father = self.currentNode

@@ -9,10 +9,9 @@ import road_id_hash
 
 #计算路段当下所需时间(h)
 def calculate_time(length, velocity):
-    road_time = np.zeros((1448, 2))
-    for i in range(0, 1448):
-        road_time[i][0] = length[i][0]
-        road_time[i][1] = length[i][1] / velocity[i]
+    road_time = np.zeros((2307, 1))
+    for i in range(0, 2307):
+        road_time[i][0] = length[i][0] / velocity[i]
 
     return road_time
 
@@ -23,9 +22,9 @@ def calculate_time(length, velocity):
 if __name__ == '__main__':
     gol._init()
     # 路段信息读取
-    adj_matrix = pd.read_pickle('./data_use/adj_matrix.pkl')  # 路段间的邻接矩阵（有向）
+    adj_matrix = pd.read_pickle('./data_use/adj_matrix_filtered_strong.pkl')  # 路段间的邻接矩阵（有向）
     road_length = pd.read_pickle('./data_use/road_filtered_length.pkl')  # 每个路段的长度
-    road_id = pd.read_pickle('./data_use/road_linkid.pkl')  # 路段对应的id
+    road_id = pd.read_pickle('./data_use/road_network_linkid_filtered.pkl')  # 路段对应的id
     road_dis = pd.read_pickle('./data_use/dis_mat.pkl')  # 路段间的直线距离
 
     # 将路段id映射为index存储为字典

@@ -23,9 +23,9 @@ class Node:
         time = gol.get_value('time_after')
         node = self
         while node.father is not None:
-            self.g += time[self.index][1]
+            self.g += time[self.index][0]
             node = node.father
-        self.g += time[self.index][1]
+        self.g += time[self.index][0]
 
     def setFather(self, node):
         self.father = node
