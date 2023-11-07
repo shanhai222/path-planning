@@ -3,22 +3,9 @@ import numpy as np
 import torch
 import random
 import gol
-import re
-import pickle
 import A_star
 import Node
 import road_id_hash
-
-# 生成随机速度
-def randfloat(num, l, h):
-    if l > h:
-        return None
-    else:
-        a = h - l
-        b = h - a
-        out = (np.random.rand(num) * a + b).tolist()
-        out = np.array(out)
-        return out
 
 #计算路段当下所需时间(h)
 def calculate_time(length, velocity):
@@ -58,9 +45,10 @@ if __name__ == '__main__':
 
     # 取第i个时间片
     i = random.randint(0, 870)
-    print(i)
+    #print(i)
     # 当前时间的实时路况
     now_v = test['x'][i][0]  # (1448,1)
+    gol.set_value('velocity_now', now_v)
     # 模型预测的下一个时间片的路况
     predict_v = output[i][0].numpy()  # (1448,1) km/h
 
@@ -70,9 +58,13 @@ if __name__ == '__main__':
     gol.set_value('time_before', time1)
     gol.set_value('time_after', time2)
 
-    start_node = Node.Node(1525982951)
-    end_node = Node.Node(1569718849)
+    start_node = Node.Node(1561692353)
+    end_node = Node.Node(1526020425)
     a = A_star.A_star(start_node, end_node)
     if a.start():
-        find_way = gol.get_value('find_way')
-        print(find_way)
+        #find_way = gol.get_value('find_way')
+        #print(find_way)
+        print('find a way successfully!')
+        a.path()
+    else:
+        print('can not find a way!')

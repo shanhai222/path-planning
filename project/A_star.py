@@ -1,6 +1,7 @@
 import Node
 import gol
 import road_id_hash
+import path
 
 #A* 算法
 class A_star:
@@ -62,10 +63,10 @@ class A_star:
 
         # 如果不在openList中，就加入openlist
         if self.nodeInOpenlist(node) == False:
-            node.setG(self.find_way)  #计算G值
+            node.father = self.currentNode
+            node.setG()  #计算G值
             node.setH(self.endNode)  #计算H值
             self.openList.append(node)
-            node.father = self.currentNode
         # 如果在openList中，判断currentNode到当前点的G是否更小
         # 如果更小，就重新计算g值，并且改变father
         else:
@@ -82,7 +83,7 @@ class A_star:
     搜索下一个可以变化到的状态，即邻接矩阵不为0的位置
     """
     def searchNear(self):
-        id = gol.get_value('road_id')
+        #id = gol.get_value('road_id')
         adj_matrix = gol.get_value('adj_matrix')
         num_nodes = adj_matrix.shape[0]
         road_next = []  # 从当前路段可到达的所有路段id
@@ -105,23 +106,25 @@ class A_star:
     """
     def start(self):
         self.startNode.setH(self.endNode)  # 计算初始节点的h值
-        self.startNode.setG(self.find_way)  # 计算初始节点的g值
+        self.startNode.setG()  # 计算初始节点的g值
         self.openList.append(self.startNode)  # 将初始节点加入开放列表
 
         while len(self.openList) != 0:
             # 获取当前开放列表里F值最小的节点
             self.currentNode = self.getMinFNode()
             # self.find_way.append(self.currentNode.data)
-            self.find_way.append(self.currentNode)
+            #self.find_way.append(self.currentNode)
             if self.currentNodeIsEndNode():
-                self.find_way.append(self.currentNode)
+                #self.find_way.append(self.currentNode)
+                return True
             else:
                 self.closeList.append(self.currentNode)
                 self.openList.remove(self.currentNode)
                 #self.step = self.currentNode.getG()
                 self.searchNear()
 
-        path = road_id_hash.transfer_path_to_road_id(self.find_way)  # 将node转化为road_id组成的path
-        gol.set_value('find_way', path)
+        #path = road_id_hash.transfer_path_to_road_id(self.find_way)  # 将node转化为road_id组成的path
+        #gol.set_value('find_way', path)
 
-        return True
+    def path(self):
+        path.print_path(self.currentNode)
