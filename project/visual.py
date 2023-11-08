@@ -65,17 +65,35 @@ def path_visual(df, path, m):
     m.save('./result/path.html')
 
 
+# 路径点可视化（仅点）
+def road_point_visual(df):
+    # 创建一个Folium地图对象
+    m = folium.Map(location=[df['latitude'].mean(), df['longitude'].mean()], zoom_start=10)
+
+    # 在地图上添加GPS坐标点标记
+    for index, row in df.iterrows():
+        folium.Marker([row['latitude'], row['longitude']], tooltip=row['link_id']).add_to(m)
+
+    return m
+
+
+
 if __name__ == '__main__':
     # 从 link_gps.v2 文件中读取路径点gps坐标
-    file_path = "./data_use/link_gps.v2"
+    file_path = "./data_use/link_gps_transformed.v2"
     data = pd.read_csv(file_path, header=None, delimiter='\t', names=['link_id', 'longitude', 'latitude'])  # (45148, 3)
     # 过滤出需要的路径点
-    sub_road = pd.read_pickle('./data_use/road_network_linkid_filtered.pkl')
+    sub_road = pd.read_pickle('./data_use/road_network_linkid_filtered_6392.pkl')
     sub_gps = data[data['link_id'].isin(sub_road)]
+
+    # m = road_point_visual(sub_gps)
+    # m.save('./result/road_point_6392.html')
+
     # 获取邻接矩阵
-    adj_matrix = pd.read_pickle('./data_use/adj_matrix_filtered_strong.pkl')
+    adj_matrix = pd.read_pickle('./data_use/adj_matrix_filtered_6392.pkl')
     # 子路网可视化
     m = road_network_visual(sub_gps, adj_matrix, sub_road)
+    # m.save('./result/road_network_6392.html')
     # 路径轨迹点
     path = pd.read_pickle('./result/path.pkl')
     path_visual(sub_gps, path, m)
