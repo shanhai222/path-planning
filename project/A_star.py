@@ -128,3 +128,4 @@ class A_star:
 
     def path(self):
         path.print_path(self.currentNode)
+        path.save_path(self.currentNode)

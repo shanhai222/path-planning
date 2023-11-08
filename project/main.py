@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     # 取第i个时间片
     i = random.randint(0, 870)
-    #print(i)
+    # print(i)
     # 当前时间的实时路况
     now_v = test['x'][i][0]  # (1448,1)
     gol.set_value('velocity_now', now_v)
@@ -57,8 +57,8 @@ if __name__ == '__main__':
     gol.set_value('time_before', time1)
     gol.set_value('time_after', time2)
 
-    start_node = Node.Node(1561692353)
-    end_node = Node.Node(1526020425)
+    start_node = Node.Node(1526000324)  # 123
+    end_node = Node.Node(1562566641)
     a = A_star.A_star(start_node, end_node)
     if a.start():
         #find_way = gol.get_value('find_way')
