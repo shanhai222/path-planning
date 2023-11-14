@@ -1,7 +1,9 @@
+from copy import deepcopy
 import Node
 import gol
 import road_id_hash
 import path
+import pickle
 
 #A* 算法
 class A_star:
@@ -9,7 +11,8 @@ class A_star:
         # 开放列表
         self.openList = []
         # 封闭列表
-        self.closeList = []
+        self.closeList = deepcopy(gol.get_value('closeList'))
+        self.last_path = deepcopy(gol.get_value('closeList'))
         # 起点
         self.startNode = startNode
         # 终点
@@ -19,7 +22,7 @@ class A_star:
         # step步
         #self.step = 0
         # 找到路径
-        self.find_way = []
+        # self.find_way = []
 
         return
 
@@ -114,18 +117,44 @@ class A_star:
             self.currentNode = self.getMinFNode()
             # self.find_way.append(self.currentNode.data)
             #self.find_way.append(self.currentNode)
+            # if self.currentNode.g <= 0.25:  # 15分钟一个时间片
+            #     if self.currentNodeIsEndNode():
+            #         return True
+            #     else:
+            #         self.closeList.append(self.currentNode)
+            #         self.openList.remove(self.currentNode)
+            #         self.searchNear()
+            # else:  # 超过一个时间片，重新规划路径
+            #     gol.set_value('current node', self.currentNode.data)
+            #     gol.set_value('closeList', self.next_close_list())
+            #     return False
             if self.currentNodeIsEndNode():
-                #self.find_way.append(self.currentNode)
                 return True
             else:
                 self.closeList.append(self.currentNode)
                 self.openList.remove(self.currentNode)
-                #self.step = self.currentNode.getG()
                 self.searchNear()
 
         #path = road_id_hash.transfer_path_to_road_id(self.find_way)  # 将node转化为road_id组成的path
         #gol.set_value('find_way', path)
 
     def path(self):
-        path.print_path(self.currentNode)
         path.save_path(self.currentNode)
+
+    def next_close_list(self):
+        cl = deepcopy(self.last_path)
+        node = self.find_15_minute()
+        return path.close_list(node.father, cl)
+
+    def find_15_minute(self):  # 找到需要重新规划的路段
+        node = self.currentNode
+        if node.g <= 0.25:  # 路段太短，不需要重新规划
+            return node
+        else:
+            prev = node.father
+            while prev is not None:
+                if prev.g < 0.25 and node.g >= 0.25:
+                    return node
+                node = prev
+                prev = prev.father
+            return node

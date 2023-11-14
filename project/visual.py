@@ -46,21 +46,27 @@ def road_network_visual(df, adj_matrix, sub_road):
 
 # 路径轨迹可视化
 def path_visual(df, path, m):
-    for i in range(len(path) - 1):
-        start_link_id = path[i]
-        end_link_id = path[i + 1]
+    f = open(path, "rb")
+    while 1:
+        try:
+            p = pickle.load(f)
+            for i in range(len(p) - 1):
+                start_link_id = p[i]
+                end_link_id = p[i + 1]
 
-        # 找到起点和终点的GPS坐标
-        start_point = df[df['link_id'] == start_link_id]
-        end_point = df[df['link_id'] == end_link_id]
+                # 找到起点和终点的GPS坐标
+                start_point = df[df['link_id'] == start_link_id]
+                end_point = df[df['link_id'] == end_link_id]
 
-        if not start_point.empty and not end_point.empty:
-            # 创建GPS坐标点列表，连接起点和终点坐标
-            points = [[start_point['latitude'].values[0], start_point['longitude'].values[0]],
-                      [end_point['latitude'].values[0], end_point['longitude'].values[0]]]
+                if not start_point.empty and not end_point.empty:
+                    # 创建GPS坐标点列表，连接起点和终点坐标
+                    points = [[start_point['latitude'].values[0], start_point['longitude'].values[0]],
+                              [end_point['latitude'].values[0], end_point['longitude'].values[0]]]
 
-            # 在地图上添加连接的路径
-            folium.PolyLine(points, color="red").add_to(m)
+                    # 在地图上添加连接的路径
+                    folium.PolyLine(points, color="red").add_to(m)
+        except EOFError:
+            break
 
     m.save('./result/path.html')
 
@@ -75,7 +81,6 @@ def road_point_visual(df):
         folium.Marker([row['latitude'], row['longitude']], tooltip=row['link_id']).add_to(m)
 
     return m
-
 
 
 if __name__ == '__main__':
@@ -95,6 +100,6 @@ if __name__ == '__main__':
     m = road_network_visual(sub_gps, adj_matrix, sub_road)
     # m.save('./result/road_network_6392.html')
     # 路径轨迹点
-    path = pd.read_pickle('./result/path.pkl')
+    path = 'result/path.pkl'
     path_visual(sub_gps, path, m)
 
