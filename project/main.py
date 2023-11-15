@@ -45,14 +45,16 @@ if __name__ == '__main__':
     #print(output.shape)
     # 随机取一个时间片作为出发时间
     # now_t = random.randint(0, 5795)
-    now_t = 2742
+    now_t = 2990
+    now_t_real = 2990  # T0
     # print(i)
     # 当前时间的实时路况
     now_v = test['x'][now_t][0]  # (6392,1)
+    time_real = calculate_time(road_length, now_v)
     #print(now_v)
     gol.set_value('velocity_now', now_v)
     # 模型预测的下一个时间片的路况
-    now_t += 1
+    now_t += 1  # T1'
     predict_v = output[now_t][0].numpy()  # (6392,1) km/h
 
     # 计算变化前后各路段所需时间
@@ -94,12 +96,12 @@ if __name__ == '__main__':
         a.path()
         gol.set_value('closeList', a.next_close_list())
         replanning_road = a.find_15_minute()  # node
-        path_time += replanning_road.g
+        #path_time += replanning_road.g
         if replanning_road.data == end_id:
             break
         start_node = Node.Node(replanning_road.data)
         end_node = Node.Node(end_id)
-        now_t += int(replanning_road.g / 0.25)  # 当前路段所处的时间片
+        now_t += int(replanning_road.g / 0.25)  # 当前路段所处的时间片 T2'
         now_v = test['x'][now_t][0]  # 当前的实时速度
         predict_v = output[now_t][0].numpy()  # 当前预测出的速度
         time1 = calculate_time(road_length, now_v)
@@ -107,6 +109,20 @@ if __name__ == '__main__':
         gol.set_value('time_before', time1)
         gol.set_value('time_after', time2)
         a = A_star.A_star(start_node, end_node)
+
+    path_contrast = pd.read_pickle('./result/path.pkl')
+    time_tmp = 0
+    now_t_real += 1  # T1
+    now_v = test['x'][now_t_real][0]
+    time_real = calculate_time(road_length, now_v)
+    for r in path_contrast:
+        path_time += time_real[road_id_hash.get_index(r)][0]
+        time_tmp += time_real[road_id_hash.get_index(r)][0]
+        if time_tmp >= 0.25:
+            now_t_real += 1  # T2
+            now_v = test['x'][now_t_real][0]
+            time_real = calculate_time(road_length, now_v)
+            time_tmp = 0
 
     print('The path takes %f hours' % path_time)
     # if a.start():
