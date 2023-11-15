@@ -4,6 +4,7 @@ import pickle
 import folium
 import networkx as nx
 from road_id_hash import *
+import random
 
 
 def road_network_visual(df, adj_matrix, sub_road):
@@ -45,11 +46,34 @@ def road_network_visual(df, adj_matrix, sub_road):
 
 
 # 路径轨迹可视化
-def path_visual(df, path, m):
+def path_visual(df, path):
+    m = folium.Map(location=[df['latitude'].mean(), df['longitude'].mean()], zoom_start=10)
+    colors = ['red', 'darkgreen', 'gray', 'purple', 'black']
+
+    # 1. 对照组路线（不需要就直接注释掉）
+    contrast_path = pd.read_pickle('result/path_contrast.pkl')
+    for i in range(len(contrast_path) - 1):
+        start_link_id = contrast_path[i]
+        end_link_id = contrast_path[i + 1]
+
+        # 找到起点和终点的GPS坐标
+        start_point = df[df['link_id'] == start_link_id]
+        end_point = df[df['link_id'] == end_link_id]
+
+        if not start_point.empty and not end_point.empty:
+            # 创建GPS坐标点列表，连接起点和终点坐标
+            points = [[start_point['latitude'].values[0], start_point['longitude'].values[0]],
+                      [end_point['latitude'].values[0], end_point['longitude'].values[0]]]
+
+            # 在地图上添加连接的路径
+            folium.PolyLine(points, color="blue").add_to(m)
+
+    # 多次动态规划路线（分段不同颜色显示）
     f = open(path, "rb")
     while 1:
         try:
             p = pickle.load(f)
+            color = random.choice(colors)
             for i in range(len(p) - 1):
                 start_link_id = p[i]
                 end_link_id = p[i + 1]
@@ -64,7 +88,7 @@ def path_visual(df, path, m):
                               [end_point['latitude'].values[0], end_point['longitude'].values[0]]]
 
                     # 在地图上添加连接的路径
-                    folium.PolyLine(points, color="red").add_to(m)
+                    folium.PolyLine(points, color=color).add_to(m)
         except EOFError:
             break
 
@@ -83,6 +107,24 @@ def road_point_visual(df):
     return m
 
 
+# 路径规划的n次结果，link点可视化
+def path_point_visual(sub_gps, m):
+    colors = ['lightred', 'darkgreen', 'gray', 'beige', 'white', 'purple', 'black']
+    f = open('./result/path.pkl', "rb")
+    while 1:
+        try:
+            p = pickle.load(f)
+            color = random.choice(colors)
+            df = sub_gps[sub_gps['link_id'].isin(p)]
+            for index, row in df.iterrows():
+                folium.Marker([row['latitude'], row['longitude']], tooltip=row['link_id'],
+                              icon=folium.Icon(color=color)).add_to(m)
+        except EOFError:
+            break
+
+    m.save('./result/point_path.html')
+
+
 if __name__ == '__main__':
     # 从 link_gps.v2 文件中读取路径点gps坐标
     file_path = "./data_use/link_gps_transformed.v2"
@@ -91,15 +133,19 @@ if __name__ == '__main__':
     sub_road = pd.read_pickle('./data_use/road_network_linkid_filtered_6392.pkl')
     sub_gps = data[data['link_id'].isin(sub_road)]
 
-    # m = road_point_visual(sub_gps)
-    # m.save('./result/road_point_6392.html')
-
     # 获取邻接矩阵
-    adj_matrix = pd.read_pickle('./data_use/adj_matrix_filtered_6392.pkl')
+    # adj_matrix = pd.read_pickle('./data_use/adj_matrix_filtered_6392.pkl')
     # 子路网可视化
-    m = road_network_visual(sub_gps, adj_matrix, sub_road)
+    # m = road_network_visual(sub_gps, adj_matrix, sub_road)
     # m.save('./result/road_network_6392.html')
-    # 路径轨迹点
+
+    # 路径轨迹
     path = 'result/path.pkl'
-    path_visual(sub_gps, path, m)
+    path_visual(sub_gps, path)
+
+    # 只看轨迹点
+    # contrast_path = pd.read_pickle('result/path_contrast.pkl')
+    # contrast_path = sub_gps[sub_gps['link_id'].isin(contrast_path)]
+    # m = road_point_visual(contrast_path)
+    # path_point_visual(sub_gps, m)
 

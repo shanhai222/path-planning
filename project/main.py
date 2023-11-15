@@ -6,17 +6,17 @@ import gol
 import A_star
 import Node
 import road_id_hash
+from link_match import link_id_match
+
 
 #计算路段当下所需时间(h)
 def calculate_time(length, velocity):
     road_time = np.zeros((6392, 1))
     for i in range(0, 6392):
-        road_time[i][0] = length[i].values[0] / velocity[i]
+        # road_time[i][0] = length[i].values[0] / velocity[i]
+        road_time[i][0] = length[i] / velocity[i]
 
     return road_time
-
-#通过坐标判断起始路段
-# def start_road(gps):
 
 
 if __name__ == '__main__':
@@ -27,6 +27,9 @@ if __name__ == '__main__':
     #print(road_length[0])
     road_id = pd.read_pickle('./data_use/road_network_linkid_filtered_6392.pkl')  # 路段对应的id
     road_dis = pd.read_pickle('./data_use/dis_mat_6392.pkl')  # 路段间的直线距离
+    link_gps = pd.read_csv('./data_use/link_gps_transformed.v2', header=None,
+                           delimiter='\t', names=['link_id', 'longitude', 'latitude'])
+    link_gps = link_gps[link_gps['link_id'].isin(road_id)]
 
     # 将路段id映射为index存储为字典
     road_id_mapping = road_id_hash.road_id_map(road_id)
@@ -35,6 +38,7 @@ if __name__ == '__main__':
     gol.set_value('road_length', road_length)
     gol.set_value('road_id', road_id)
     gol.set_value('road_dis', road_dis)
+    gol.set_value('link_gps', link_gps)
     gol.set_value('road_id_mapping', road_id_mapping)
     #print(length.shape)
     # print(road_id[1000])
@@ -65,8 +69,14 @@ if __name__ == '__main__':
 
     # closelist是全局的，避免走重复的路
     gol.set_value('closeList', [])
-    start_id = 1570708754
-    end_id = 1525870215
+    start_lon = 116.374107
+    start_lat = 39.996142
+    end_lon = 116.475587
+    end_lat = 39.915614
+    start_id = link_id_match(start_lon, start_lat)
+    # start_id = 1570708754
+    end_id = link_id_match(end_lon, end_lat)
+    # end_id = 1525870215
     start_node = Node.Node(start_id)
     end_node = Node.Node(end_id)
     # gol.set_value('current node', start_node.data)

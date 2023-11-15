@@ -11,7 +11,7 @@ import road_id_hash
 def calculate_time(length, velocity):
     road_time = np.zeros((6392, 1))
     for i in range(0, 6392):
-        road_time[i][0] = length[i].values[0] / velocity[i]
+        road_time[i][0] = length[i] / velocity[i]
 
     return road_time
 
