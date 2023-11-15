@@ -47,11 +47,22 @@ def road_network_visual(df, adj_matrix, sub_road):
 
 # 路径轨迹可视化
 def path_visual(df, path):
-    m = folium.Map(location=[df['latitude'].mean(), df['longitude'].mean()], zoom_start=10)
+    m = folium.Map(location=[df['latitude'].mean(), df['longitude'].mean()], zoom_start=12)
     colors = ['red', 'darkgreen', 'gray', 'purple', 'black']
 
     # 1. 对照组路线（不需要就直接注释掉）
     contrast_path = pd.read_pickle('result/path_contrast.pkl')
+
+    start_gps = df[df['link_id'] == contrast_path[0]]
+    end_gps = df[df['link_id'] == contrast_path[-1]]
+    start_latitude = start_gps['latitude'].iloc[0]
+    start_longitude = start_gps['longitude'].iloc[0]
+    end_latitude = end_gps['latitude'].iloc[0]
+    end_longitude = end_gps['longitude'].iloc[0]
+
+    folium.Marker([start_latitude, start_longitude], tooltip=start_gps['link_id'].iloc[0]).add_to(m)
+    folium.Marker([end_latitude, end_longitude], tooltip=end_gps['link_id'].iloc[0]).add_to(m)
+
     for i in range(len(contrast_path) - 1):
         start_link_id = contrast_path[i]
         end_link_id = contrast_path[i + 1]

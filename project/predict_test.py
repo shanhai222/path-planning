@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import pickle
 
+import torch
+
 
 # 前提假设：就两次规划结果
 # contrast_path 比较动态规划的分段规划结果
@@ -55,5 +57,32 @@ def find_high_variation():
 
 
 if __name__ == "__main__":
-    contrast_path()
+    # contrast_path()
     # find_high_variation()
+    test = pd.read_pickle('./data_use/test_all.pkl')
+    output = torch.load('./data_use/output_all.pth').numpy()  # 预测结果 (5795, 1, 6392, 1)
+    now_t = 2990
+    now_v = test['x']
+
+    # real condition
+    v_t0 = now_v[now_t].squeeze()  # 当前时间片T0
+    v_t1 = now_v[now_t+1].squeeze()  # 下一个时间片T1
+    v_t2 = now_v[now_t+2].squeeze()  # 下下个时间片T2
+
+    # predict condition
+    pre_v_t1 = output[now_t+1].squeeze()  # T1'
+    pre_v_t2 = output[now_t+2].squeeze()  # T2'
+
+    diff_t0_t1 = np.mean(abs(v_t0 - v_t1))
+    diff_t1_t2 = np.mean(abs(v_t1 - v_t2))
+
+    pre_diff_t1_t2 = np.mean(abs(pre_v_t1 - pre_v_t2))
+
+    pre_now_t1 = np.mean(abs(v_t1 - pre_v_t1))
+    pre_now_t2 = np.mean(abs(v_t2 - pre_v_t2))
+
+    print('T0-T1:', diff_t0_t1)
+    print('T1-T2:', diff_t1_t2)
+    print("T1'-T2':", pre_diff_t1_t2)
+    print("T1-T1':", pre_now_t1)
+    print("T2-T2':", pre_now_t2)
