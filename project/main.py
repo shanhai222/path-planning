@@ -1,13 +1,12 @@
+import pickle
 import pandas as pd
 import numpy as np
 import torch
-import random
 import gol
 import A_star
 import Node
 import road_id_hash
 from link_match import link_id_match
-
 
 #计算路段当下所需时间(h)
 def calculate_time(length, velocity):
@@ -83,24 +82,6 @@ if __name__ == '__main__':
     a = A_star.A_star(start_node, end_node)
     path_time = 0
 
-    # while not a.start():  # 超过一个时间片，重新规划路径
-    #     a.path()
-    #     path_time += a.time()
-    #     start_node = Node.Node(gol.get_value('current node'))
-    #     # 使用预测出的下一个时间片的速度
-    #     now_v = predict_v
-    #     now_t += 1
-    #     predict_v = output[now_t][0].numpy()
-    #     time1 = calculate_time(road_length, now_v)
-    #     time2 = calculate_time(road_length, predict_v)
-    #     gol.set_value('time_before', time1)
-    #     gol.set_value('time_after', time2)
-    #     a = A_star.A_star(start_node, end_node)
-    #
-    # # 该条路径上最后一个时间片
-    # a.path()
-    # path_time += a.time()
-    # print('The path takes %f hours' % path_time)
 
     while a.start():
         a.path()
@@ -120,24 +101,24 @@ if __name__ == '__main__':
         gol.set_value('time_after', time2)
         a = A_star.A_star(start_node, end_node)
 
-    path_contrast = pd.read_pickle('./result/path.pkl')
-    time_tmp = 0
-    now_t_real += 1  # T1
-    now_v = test['x'][now_t_real][0]
-    time_real = calculate_time(road_length, now_v)
-    for r in path_contrast:
-        path_time += time_real[road_id_hash.get_index(r)][0]
-        time_tmp += time_real[road_id_hash.get_index(r)][0]
-        if time_tmp >= 0.25:
-            now_t_real += 1  # T2
+    f = open('./result/path.pkl', "rb")
+    while 1:
+        try:
+            path = pickle.load(f)
+            time_tmp = 0
+            now_t_real += 1  # T1
             now_v = test['x'][now_t_real][0]
             time_real = calculate_time(road_length, now_v)
-            time_tmp = 0
+            for r in path:
+                path_time += time_real[road_id_hash.get_index(r)][0]
+                time_tmp += time_real[road_id_hash.get_index(r)][0]
+                if time_tmp >= 0.25:
+                    path = pickle.load(f)
+                    now_t_real += 1  # T2
+                    now_v = test['x'][now_t_real][0]
+                    time_real = calculate_time(road_length, now_v)
+                    time_tmp = 0
+        except EOFError:
+            break
 
     print('The path takes %f hours' % path_time)
-    # if a.start():
-    #     #find_way = gol.get_value('find_way')
-    #     #print(find_way)
-    #     a.path()
-    # else:  #超过一个时间片，重新规划路径
-    #     start_node = gol.get_value('current road')
